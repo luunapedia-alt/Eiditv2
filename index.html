@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Editor Posting - LUUNASTORE</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a15; min-height: 100vh; padding: 0 0 60px; color: #fff; }
+    .header { background: linear-gradient(135deg, #0d1b4b, #1a1a6e); text-align: center; padding: 24px 20px 20px; border-bottom: 2px solid #2a3a8a; }
+    .header h1 { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+    .header p { color: #60a5fa; font-size: 12px; margin-top: 4px; }
+    .tabs { display: flex; background: #0f0f20; border-bottom: 1px solid #1e1e3a; }
+    .tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #4a4a7a; cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; }
+    .tab.active { color: #60a5fa; border-bottom-color: #3b82f6; background: #131328; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .wrap { padding: 20px 16px; max-width: 500px; margin: 0 auto; }
+    .sec-title { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #60a5fa; margin: 18px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .sec-title::after { content:''; flex:1; height:1px; background:#1a1a35; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #93c5fd; margin-bottom: 6px; }
+    .field input[type=text] { width: 100%; padding: 12px 14px; background: #131328; border: 1.5px solid #1e1e3a; border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s; }
+    .field input:focus { border-color: #3b82f6; }
+    .field input::placeholder { color: #4a4a7a; }
+    .upload-zone { border: 2px dashed #1e1e3a; border-radius: 14px; padding: 24px; text-align: center; cursor: pointer; transition: border-color .2s; background: #0f0f20; }
+    .upload-zone:hover { border-color: #3b82f6; }
+    .upload-zone input { display: none; }
+    .uicon { font-size: 32px; margin-bottom: 8px; }
+    .utxt { font-size: 13px; color: #4a4a7a; }
+    .utxt span { color: #3b82f6; font-weight: 700; }
+    .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; border-radius: 10px; overflow: hidden; }
+    .preview-grid .thumb { aspect-ratio: 1; overflow: hidden; position: relative; background: #0f0f20; border-radius: 8px; }
+    .preview-grid .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .preview-grid .thumb .del { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.75); color: #fff; font-size: 12px; cursor: pointer; display: grid; place-items: center; font-weight: 700; }
+    .single-upload { border: 2px dashed #1e1e3a; border-radius: 12px; overflow: hidden; cursor: pointer; min-height: 120px; display: flex; align-items: center; justify-content: center; background: #0f0f20; transition: border-color .2s; }
+    .single-upload:hover { border-color: #3b82f6; }
+    .single-upload input { display: none; }
+    .single-upload img { width: 100%; display: block; }
+    .single-upload .placeholder { text-align: center; color: #4a4a7a; padding: 20px; }
+    .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-chip { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border-color .2s; flex-shrink: 0; }
+    .color-chip.selected { border-color: #fff; }
+    .radio-chip { padding: 8px 14px; background: #131328; border: 1.5px solid #1e1e3a; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; color: #4a4a7a; user-select: none; transition: all .2s; }
+    .radio-chip.selected { border-color: #3b82f6; color: #93c5fd; background: rgba(59,130,246,.15); }
+
+    /* Pilihan Template Karakter */
+    .char-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
+    .char-card { border-radius: 12px; overflow: hidden; cursor: pointer; border: 2.5px solid #1e1e3a; background: #131328; transition: all .2s; }
+    .char-card:hover { border-color: #3b82f6; }
+    .char-card.selected { border-color: #60a5fa; box-shadow: 0 0 14px rgba(59, 130, 246, .35); transform: scale(1.02); }
+    .char-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #0f0f20; }
+    .char-card .cname { font-size: 12px; font-weight: 800; text-align: center; padding: 8px 4px; color: #cbd5e1; letter-spacing: .5px; }
+    .char-card.selected .cname { color: #fff; background: #1d4ed8; }
+
+    .gen-btn { width: 100%; padding: 15px; margin-top: 14px; background: linear-gradient(135deg, #1d4ed8, #4f46e5); border: none; border-radius: 13px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .dl-btn { width: 100%; padding: 14px; margin-top: 10px; background: #065f46; border: none; border-radius: 13px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; display: none; }
+    canvas { display: none; width: 100%; border-radius: 12px; margin-top: 14px; }
+    .collage-item { margin-top: 16px; }
+    .collage-item img { width: 100%; border-radius: 12px; display: block; }
+    .hint { font-size: 11px; color: #4a4a7a; margin-top: 6px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #22c55e; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; transition: transform .3s; z-index: 999; white-space: nowrap; }
+    .toast.error { background: #dc2626; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .tutorial h2 { font-size: 16px; font-weight: 800; color: #60a5fa; margin: 22px 0 10px; }
+    .tutorial h2:first-child { margin-top: 4px; }
+    .tutorial-step { display: flex; gap: 12px; background: #0f0f20; border: 1px solid #1e1e3a; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+    .tutorial-step .num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #1d4ed8; color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .tutorial-step .txt { font-size: 13.5px; line-height: 1.5; color: #cbd5e1; }
+    .tutorial-step .txt b { color: #fff; }
+    .tutorial-note { background: rgba(96,165,250,.1); border-left: 3px solid #3b82f6; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #93c5fd; margin: 14px 0; line-height: 1.5; }
+    .tutorial-footer { text-align: center; font-size: 12px; color: #4a4a7a; margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e1e3a; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>🎨 EDITOR POSTING</h1>
+  <p>LUUNASTORE • Collage & Auto Template</p>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('collage',this)">🖼️ Collage</div>
+  <div class="tab" onclick="switchTab('template',this)">✨ Template</div>
+  <div class="tab" onclick="switchTab('tutorial',this)">📖 Tutorial</div>
+</div>
+
+<!-- COLLAGE -->
+<div class="tab-content active" id="tab-collage">
+  <div class="wrap">
+    <div class="sec-title">Upload Foto</div>
+    <div class="upload-zone" onclick="document.getElementById('collage-input').click()">
+      <input type="file" id="collage-input" accept="image/*" multiple onchange="addCollageImages(event)"/>
+      <div class="uicon">📁</div>
+      <div class="utxt">Tap untuk upload foto<br><span>Bisa pilih banyak sekaligus (max 24)</span></div>
+    </div>
+    <p class="hint">Selalu 2 foto per collage — 4 foto = 2 collage, 8 foto = 4 collage, dst. Maks ukuran 10 MB per foto.</p>
+    <div id="collage-preview" class="preview-grid" style="display:none;"></div>
+    <div class="field" style="margin-top:16px;">
+      <label>Warna Background</label>
+      <div class="color-row" id="bg-colors">
+        <div class="color-chip selected" style="background:#000" onclick="pickBg('#000',this)"></div>
+        <div class="color-chip" style="background:#fff" onclick="pickBg('#fff',this)"></div>
+        <div class="color-chip" style="background:#1a1a2e" onclick="pickBg('#1a1a2e',this)"></div>
+        <div class="color-chip" style="background:#4b6cb7" onclick="pickBg('#4b6cb7',this)"></div>
+        <div class="color-chip" style="background:#c471ed" onclick="pickBg('#c471ed',this)"></div>
+        <div class="color-chip" style="background:#f7971e" onclick="pickBg('#f7971e',this)"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Gap / Jarak antar foto</label>
+      <div class="color-row">
+        <div class="radio-chip selected" onclick="pickGap(0,this)">Tidak ada</div>
+        <div class="radio-chip" onclick="pickGap(8,this)">Kecil</div>
+        <div class="radio-chip" onclick="pickGap(16,this)">Sedang</div>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="generateCollage()">🖼️ Generate Collage</button>
+    <canvas id="collage-canvas"></canvas>
+    <button class="dl-btn" id="dl-collage" onclick="downloadCanvas('collage-canvas','collage-luunastore.jpg')">⬇️ Download Collage</button>
+    <div id="collage-results" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- TEMPLATE -->
+<div class="tab-content" id="tab-template">
+  <div class="wrap">
+    <div class="sec-title">Pilih Template Karakter</div>
+    <div class="char-grid">
+      <div class="char-card selected" onclick="pickTemplate('mika', this)">
+        <img src="template-mika.jpg" alt="Mika"/>
+        <div class="cname">🌸 Mika</div>
+      </div>
+      <div class="char-card" onclick="pickTemplate('shiroko', this)">
+        <img src="template-shiroko.jpg" alt="Shiroko"/>
+        <div class="cname">🐺 Shiroko</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Foto Akun / Produk</div>
+    <div class="single-upload" onclick="document.getElementById('tmpl-img').click()">
+      <input type="file" id="tmpl-img" accept="image/*" onchange="previewTmpl(event)"/>
+      <div class="placeholder" id="tmpl-placeholder">
+        <div class="uicon">🖼️</div>
+        <div class="utxt" style="font-size:12px;">Tap upload foto akun</div>
+      </div>
+      <img id="tmpl-preview-img" style="display:none;"/>
+    </div>
+
+    <div class="sec-title">Info Posting</div>
+    <div class="field">
+      <label>Harga</label>
+      <input type="text" id="tmpl-harga" placeholder="Contoh: 120000 otomatis jadi 120K (atau 350K NEGO)" onblur="this.value=formatHarga(this.value)"/>
+    </div>
+    <div class="field">
+      <label>Warna Teks Harga</label>
+      <div class="color-row" id="harga-colors">
+        <div class="color-chip selected" style="background:#1a1a3a" onclick="pickHargaColor('#1a1a3a',this)"></div>
+        <div class="color-chip" style="background:#7c3aed" onclick="pickHargaColor('#7c3aed',this)"></div>
+        <div class="color-chip" style="background:#dc2626" onclick="pickHargaColor('#dc2626',this)"></div>
+        <div class="color-chip" style="background:#059669" onclick="pickHargaColor('#059669',this)"></div>
+        <div class="color-chip" style="background:#2563eb" onclick="pickHargaColor('#2563eb',this)"></div>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="generateTemplate()">✨ Generate Template</button>
+    <canvas id="tmpl-canvas"></canvas>
+    <button class="dl-btn" id="dl-tmpl" onclick="downloadCanvas('tmpl-canvas','posting-luunastore.jpg')">⬇️ Download Gambar</button>
+  </div>
+</div>
+
+<!-- TUTORIAL -->
+<div class="tab-content" id="tab-tutorial">
+  <div class="wrap tutorial">
+    <h2>✨ Cara Bikin Template Harga</h2>
+    <div class="tutorial-step"><div class="num">1</div><div class="txt">Tap tab <b>✨ Template</b> di atas.</div></div>
+    <div class="tutorial-step"><div class="num">2</div><div class="txt">Pilih template karakter yang kamu mau: <b>Mika</b> atau <b>Shiroko</b>.</div></div>
+    <div class="tutorial-step"><div class="num">3</div><div class="txt">Tap kotak <b>"Tap upload foto akun"</b>, lalu pilih screenshot akun/produk dari galeri HP.</div></div>
+    <div class="tutorial-step"><div class="num">4</div><div class="txt">Isi kolom <b>Harga</b>. Contoh: <b>250k</b> atau <b>350K NEGO</b>.</div></div>
+    <div class="tutorial-step"><div class="num">5</div><div class="txt">Tap salah satu bulatan warna di bawahnya buat ganti warna teks harga (opsional).</div></div>
+    <div class="tutorial-step"><div class="num">6</div><div class="txt">Tap tombol <b>"✨ Generate Template"</b>, tunggu sebentar sampai muncul preview.</div></div>
+    <div class="tutorial-step"><div class="num">7</div><div class="txt">Tap <b>"⬇️ Download Gambar"</b> — gambar otomatis tersimpan ke galeri HP.</div></div>
+
+    <div class="tutorial-note">⚠️ Kalau bagian pinggir foto kepotong, itu normal — foto otomatis di-crop biar pas penuh di frame. Usahakan bagian penting (nama karakter, level, dll) ada di tengah foto.</div>
+
+    <h2>🧩 Cara Bikin Collage</h2>
+    <div class="tutorial-step"><div class="num">1</div><div class="txt">Tap tab <b>🖼️ Collage</b> di atas.</div></div>
+    <div class="tutorial-step"><div class="num">2</div><div class="txt">Tap area upload, pilih beberapa foto sekaligus dari galeri.</div></div>
+    <div class="tutorial-step"><div class="num">3</div><div class="txt">Atur warna background & jarak antar foto kalau mau (opsional).</div></div>
+    <div class="tutorial-step"><div class="num">4</div><div class="txt">Tap <b>"🖼️ Generate Collage"</b>.</div></div>
+    <div class="tutorial-step"><div class="num">5</div><div class="txt">Tap <b>"⬇️ Download Collage"</b> — gambar tersimpan ke galeri.</div></div>
+
+    <h2>❓ Tips Biar Gak Bingung</h2>
+    <div class="tutorial-note">
+      • Isi harga dulu sebelum tap Generate — kalau kosong nanti muncul notif "Isi harga dulu!"<br>
+      • Upload foto dulu sebelum Generate — kalau belum ada foto nanti muncul notif "Upload foto dulu!"<br>
+      • Mau ganti karakter/foto/harga? Tinggal pilih ulang terus tap Generate lagi — hasil lama otomatis ketimpa.<br>
+      • Simpan halaman ini di bookmark/homescreen HP biar gampang diakses tiap mau posting.
+    </div>
+
+    <div class="tutorial-footer">Ada kendala? Hubungi admin LUUNASTORE.IN 📩</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var MAX_MB = 10;
+  var collageFiles = [];
+  var bgColor = '#000';
+  var gapSize = 0;
+  var tmplImgObj = null;
+  var hargaColor = '#1a1a3a';
+  var selectedTemplate = 'mika';
+
+  // Konfigurasi koordinat frame & banner harga (proporsi terhadap kanvas 1:1)
+  var TEMPLATES = {
+    mika: {
+      src: 'template-mika.jpg',
+      frame: { x: 0.312, y: 0.363, w: 0.586, h: 0.350, radius: 10 },
+      price: { cx: 0.505, cy: 0.822, maxW: 0.38 }
+    },
+    shiroko: {
+      src: 'template-shiroko.jpg',
+      frame: { x: 0.355, y: 0.358, w: 0.548, h: 0.358, radius: 10 },
+      price: { cx: 0.505, cy: 0.822, maxW: 0.38 }
+    }
+  };
+
+  // Preload kedua gambar template
+  var templateImgs = {};
+  Object.keys(TEMPLATES).forEach(function(key) {
+    var img = new Image();
+    img.src = TEMPLATES[key].src;
+    templateImgs[key] = img;
+  });
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '') + ' show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function() { t.classList.remove('show'); }, 2600);
+  }
+
+  function pickTemplate(key, el) {
+    selectedTemplate = key;
+    document.querySelectorAll('.char-card').forEach(function(c) { c.classList.remove('selected'); });
+    el.classList.add('selected');
+  }
+
+  function pickBg(color, el) {
+    bgColor = color;
+    document.querySelectorAll('#bg-colors .color-chip').forEach(function(c) { c.classList.remove('selected'); });
+    el.classList.add('selected');
+  }
+
+  function pickGap(size, el) {
+    gapSize = size;
+    el.parentElement.querySelectorAll('.radio-chip').forEach(function(c) { c.classList.remove('selected'); });
+    el.classList.add('selected');
+  }
+
+  function pickHargaColor(color, el) {
+    hargaColor = color;
+    document.querySelectorAll('#harga-colors .color-chip').forEach(function(c) { c.classList.remove('selected'); });
+    el.classList.add('selected');
+  }
+
+  function formatHarga(val) {
+    var v = (val || '').trim();
+    if (!v) return '';
+    // Jika murni angka, ubah otomatis ke format K / JT
+    if (/^\d+$/.test(v)) {
+      var num = parseInt(v, 10);
+      if (num >= 1000000) {
+        var jt = (num / 1000000).toFixed(2).replace(/\.?0+$/, '');
+        return jt + 'JT';
+      }
+      if (num >= 1000) {
+        var k = (num / 1000).toFixed(1).replace(/\.0$/, '');
+        return k + 'K';
+      }
+    }
+    return v.toUpperCase();
+  }
+
+  function drawCoverImage(ctx, img, x, y, w, h) {
+    var imgRatio = img.width / img.height;
+    var boxRatio = w / h;
+    var sx, sy, sw, sh;
+    if (imgRatio > boxRatio) {
+      sh = img.height;
+      sw = sh * boxRatio;
+      sx = (img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = img.width;
+      sh = sw / boxRatio;
+      sx = 0;
+      sy = (img.height - sh) / 2;
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  }
+
+  function roundedRectPath(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  // ===== TEMPLATE =====
+  function previewTmpl(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      showToast('Ukuran foto maksimal ' + MAX_MB + ' MB!', true);
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        tmplImgObj = img;
+        var prev = document.getElementById('tmpl-preview-img');
+        prev.src = e.target.result;
+        prev.style.display = 'block';
+        document.getElementById('tmpl-placeholder').style.display = 'none';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function generateTemplate() {
+    if (!tmplImgObj) {
+      showToast('Upload foto dulu!', true);
+      return;
+    }
+    var hargaInput = document.getElementById('tmpl-harga');
+    var harga = formatHarga(hargaInput.value);
+    hargaInput.value = harga;
+    if (!harga) {
+      showToast('Isi harga dulu!', true);
+      return;
+    }
+
+    var cfg = TEMPLATES[selectedTemplate];
+    var bgImg = templateImgs[selectedTemplate];
+    if (!bgImg.complete || bgImg.naturalWidth === 0) {
+      showToast('File ' + cfg.src + ' tidak ditemukan di folder web!', true);
+      return;
+    }
+
+    var SIZE = 1080;
+    var canvas = document.getElementById('tmpl-canvas');
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    var ctx = canvas.getContext('2d');
+
+    // 1. Gambar template karakter (1:1)
+    ctx.drawImage(bgImg, 0, 0, SIZE, SIZE);
+
+    // 2. Tempel screenshot akun di dalam bingkai tengah
+    var fx = Math.round(cfg.frame.x * SIZE);
+    var fy = Math.round(cfg.frame.y * SIZE);
+    var fw = Math.round(cfg.frame.w * SIZE);
+    var fh = Math.round(cfg.frame.h * SIZE);
+
+    ctx.save();
+    roundedRectPath(ctx, fx, fy, fw, fh, cfg.frame.radius);
+    ctx.clip();
+    drawCoverImage(ctx, tmplImgObj, fx, fy, fw, fh);
+    ctx.restore();
+
+    // 3. Tulis harga di tengah banner miring bawah
+    var cx = cfg.price.cx * SIZE;
+    var cy = cfg.price.cy * SIZE;
+    var maxW = cfg.price.maxW * SIZE;
+
+    var fontSize = 54;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = hargaColor;
+    do {
+      ctx.font = '900 ' + fontSize + 'px "Segoe UI", Arial, sans-serif';
+      fontSize -= 2;
+    } while (ctx.measureText(harga).width > maxW && fontSize > 24);
+
+    ctx.fillText(harga, cx, cy);
+
+    canvas.style.display = 'block';
+    document.getElementById('dl-tmpl').style.display = 'block';
+    showToast('Template ' + selectedTemplate.toUpperCase() + ' siap didownload!');
+  }
+
+  // ===== COLLAGE =====
+  function addCollageImages(event) {
+    var files = Array.from(event.target.files);
+    if (!files.length) return;
+    files.forEach(function(file) {
+      if (collageFiles.length >= 24) return;
+      if (file.size > MAX_MB * 1024 * 1024) {
+        showToast(file.name + ' melebihi ' + MAX_MB + ' MB!', true);
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+          collageFiles.push({ src: e.target.result, img: img });
+          renderCollagePreview();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+  }
+
+  function renderCollagePreview() {
+    var grid = document.getElementById('collage-preview');
+    if (!collageFiles.length) {
+      grid.style.display = 'none';
+      grid.innerHTML = '';
+      return;
+    }
+    grid.style.display = 'grid';
+    grid.innerHTML = collageFiles.map(function(item, idx) {
+      return '<div class="thumb"><img src="' + item.src + '"/><div class="del" onclick="removeCollageImg(' + idx + ')">×</div></div>';
+    }).join('');
+  }
+
+  function removeCollageImg(idx) {
+    collageFiles.splice(idx, 1);
+    renderCollagePreview();
+  }
+
+  function renderSingleCollage(canvas, pair) {
+    var SIZE = 1080;
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    var g = gapSize;
+    if (pair.length === 1) {
+      drawCoverImage(ctx, pair[0].img, g, g, SIZE - g * 2, SIZE - g * 2);
+    } else {
+      var h = (SIZE - g * 3) / 2;
+      drawCoverImage(ctx, pair[0].img, g, g, SIZE - g * 2, h);
+      drawCoverImage(ctx, pair[1].img, g, g * 2 + h, SIZE - g * 2, h);
+    }
+  }
+
+  function generateCollage() {
+    if (!collageFiles.length) {
+      showToast('Upload foto dulu!', true);
+      return;
+    }
+    var pairs = [];
+    for (var i = 0; i < collageFiles.length; i += 2) {
+      pairs.push(collageFiles.slice(i, i + 2));
+    }
+
+    var singleCanvas = document.getElementById('collage-canvas');
+    var singleDl = document.getElementById('dl-collage');
+    var multiWrap = document.getElementById('collage-results');
+
+    if (pairs.length === 1) {
+      multiWrap.style.display = 'none';
+      multiWrap.innerHTML = '';
+      renderSingleCollage(singleCanvas, pairs[0]);
+      singleCanvas.style.display = 'block';
+      singleDl.style.display = 'block';
+    } else {
+      singleCanvas.style.display = 'none';
+      singleDl.style.display = 'none';
+      multiWrap.innerHTML = '';
+      multiWrap.style.display = 'block';
+
+      pairs.forEach(function(pair, idx) {
+        var tmp = document.createElement('canvas');
+        renderSingleCollage(tmp, pair);
+        var url = tmp.toDataURL('image/jpeg', 0.95);
+
+        var div = document.createElement('div');
+        div.className = 'collage-item';
+        div.innerHTML =
+          '<img src="' + url + '"/>' +
+          '<button class="dl-btn" style="display:block;" onclick="downloadDataUrl(\'' + url + '\',\'collage-' + (idx + 1) + '-luunastore.jpg\')">⬇️ Download Collage #' + (idx + 1) + '</button>';
+        multiWrap.appendChild(div);
+      });
+    }
+    showToast(pairs.length + ' collage berhasil dibuat!');
+  }
+
+  function downloadCanvas(canvasId, filename) {
+    var canvas = document.getElementById(canvasId);
+    downloadDataUrl(canvas.toDataURL('image/jpeg', 0.95), filename);
+  }
+
+  function downloadDataUrl(url, filename) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+</script>
+</body>
+</html>
